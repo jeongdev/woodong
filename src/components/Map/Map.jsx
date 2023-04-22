@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { firestore } from "../../firebase/firebase";
 import { COLLECTION, DOC } from "../../config/config";
+import InfoWindow from "./InfoWindow";
 
 const { kakao } = window;
 export default function Map() {
@@ -99,5 +100,13 @@ export default function Map() {
     initialMap();
   }, [data, location]);
 
-  return <div id="map" style={{ width: "100vw", height: "800px" }}></div>;
+  return (
+    <div
+      style={{ width: "100%", height: "1000px" }}
+      className="overflow-hidden relative"
+    >
+      <InfoWindow data={data} />
+      <div id="map" className="w-full h-full" />
+    </div>
+  );
 }
