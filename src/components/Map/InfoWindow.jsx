@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useRef } from "react";
 
 export default function InfoWindow({ data }) {
   const [category, setCategory] = useState("전체");
@@ -15,8 +15,15 @@ export default function InfoWindow({ data }) {
     "경상",
     "제주",
   ];
+  const scrollRef = useRef();
+
+  const cateScroll = () => {
+    scrollRef.current.scrollTop = 0;
+  };
+
   const cateChangeHandler = (e) => {
     setCategory(e.target.value);
+    cateScroll();
   };
 
   return (
@@ -25,7 +32,7 @@ export default function InfoWindow({ data }) {
         name=""
         id=""
         onChange={cateChangeHandler}
-        className="rounded-lg text-center py-2 px-6 mb-6"
+        className="h-[5%] rounded-lg text-center py-2 px-6 mb-6"
       >
         {location.map((x, i) => (
           <option value={x} key={i}>
@@ -33,7 +40,10 @@ export default function InfoWindow({ data }) {
           </option>
         ))}
       </select>
-      <div className="h-full overflow-y-scroll pr-6 border-t border-gray-200">
+      <div
+        ref={scrollRef}
+        className="h-[95%] overflow-y-scroll pr-6 border-t border-gray-200"
+      >
         <ul className="mb-5">
           {data &&
             data
