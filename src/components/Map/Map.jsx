@@ -124,7 +124,7 @@ export default function Map() {
   return (
     <div
       style={{ width: "100%", height: "1000px" }}
-      className="overflow-hidden relative"
+      className="overflow-hidden relative flex"
     >
       <InfoWindow data={data} moveMap={infoWindowClickHandler} />
       <div id="map" className="w-full h-full" />

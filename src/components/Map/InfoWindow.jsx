@@ -32,7 +32,7 @@ export default function InfoWindow({ data, moveMap }) {
   };
 
   return (
-    <aside className="w-96 h-full py-5 pl-6 bg-[rgba(255,255,255,0.8)] absolute z-10">
+    <aside className="w-96 h-full py-5 pl-6 bg-[rgba(255,255,255,0.8)] z-10">
       <select
         name=""
         id=""
