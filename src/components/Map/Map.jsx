@@ -1,6 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { firestore } from "../../firebase/firebase";
-import { COLLECTION, DOC } from "../../config/config";
+import { PROJECT_ID } from "../../config/config";
 import InfoWindow from "./InfoWindow";
 
 const { kakao } = window;
@@ -48,14 +47,13 @@ export default function Map() {
   }
 
   const getData = () => {
-    firestore
-      .collection(COLLECTION)
-      .doc(DOC)
-      .get()
-      .then((data) => {
-        setData(data.data().list);
-      });
+    fetch(
+      `https://${PROJECT_ID}-default-rtdb.firebaseio.com/hospital/list.json`
+    )
+      .then((data) => data.json())
+      .then((res) => setData(res));
   };
+
   const initialMap = async () => {
     const mapContainer = document.getElementById("map"), // 지도를 표시할 div
       mapOption = {
