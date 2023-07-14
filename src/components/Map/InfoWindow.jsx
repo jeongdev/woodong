@@ -1,20 +1,9 @@
 import React, { useState, useRef } from "react";
+import location from "../../data/location.json";
 
 export default function InfoWindow({ data, moveMap }) {
   const [category, setCategory] = useState("전체");
-  const location = [
-    "전체",
-    "서울",
-    "경기",
-    "인천",
-    "대전",
-    "충청",
-    "대구",
-    "울산",
-    "부산",
-    "경상도",
-    "제주",
-  ];
+
   const scrollRef = useRef();
 
   const cateScroll = () => {
