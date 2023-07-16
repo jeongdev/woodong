@@ -55,6 +55,16 @@ export default function Map() {
       .then((res) => setData(res));
   };
 
+  // const getData = () => {
+  //   firestore
+  //     .collection(COLLECTION)
+  //     .doc(DOC)
+  //     .get()
+  //     .then((data) => {
+  //       setData(data.data().list);
+  //     });
+  // };
+
   const createMap = () => {
     if (kakaoMap) return;
     const mapOption = {
@@ -131,30 +141,31 @@ export default function Map() {
 
   return (
     <div
-      style={{ width: "100%", height: "800px" }}
-      className="overflow-hidden relative flex"
+      style={{ width: "100%" }}
+      className="h-[calc(100vh_-_80px)] overflow-hidden relative flex flex-col-reverse md:flex-row"
     >
-      <InfoWindow data={data} moveMap={infoWindowClickHandler} />
-      <div ref={mapContainer} id="map" className="w-full h-full" />
-      <button
-        type="button"
-        className="rounded-md bg-sky-500/75 p-3 absolute right-0 bottom-0 z-50"
-        onClick={() => myLocationHandler()}
-      >
-        <svg
-          xmlns="http://www.w3.org/2000/svg"
-          fill="none"
-          viewBox="0 0 24 24"
-          strokeWidth={1.5}
-          stroke="white"
-          className="w-6 h-6"
+      <InfoWindow data={data} moveMap={infoWindowClickHandler} map={kakaoMap} />
+      <article ref={mapContainer} id="map" className="w-full h-full">
+        <button
+          type="button"
+          className="rounded-md bg-sky-500/75 p-3 absolute right-0 bottom-0 z-40"
+          onClick={() => myLocationHandler()}
         >
-          <path
-            strokeLinecap="round"
-            d="M16.5 12a4.5 4.5 0 11-9 0 4.5 4.5 0 019 0zm0 0c0 1.657 1.007 3 2.25 3S21 13.657 21 12a9 9 0 10-2.636 6.364M16.5 12V8.25"
-          />
-        </svg>
-      </button>
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            fill="none"
+            viewBox="0 0 24 24"
+            strokeWidth={1.5}
+            stroke="white"
+            className="w-6 h-6"
+          >
+            <path
+              strokeLinecap="round"
+              d="M16.5 12a4.5 4.5 0 11-9 0 4.5 4.5 0 019 0zm0 0c0 1.657 1.007 3 2.25 3S21 13.657 21 12a9 9 0 10-2.636 6.364M16.5 12V8.25"
+            />
+          </svg>
+        </button>
+      </article>
     </div>
   );
 }

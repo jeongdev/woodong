@@ -22,7 +22,7 @@ export default function Header() {
             />
           </NavLink>
         </h1>
-        {/* <div className="flex lg:hidden">
+        <div className="flex md:hidden">
           <button
             type="button"
             className="-m-2.5 inline-flex items-center justify-center rounded-md p-2.5 text-gray-700"
@@ -31,8 +31,8 @@ export default function Header() {
             <span className="sr-only">Open main menu</span>
             <Bars3Icon className="h-6 w-6" aria-hidden="true" />
           </button>
-        </div> */}
-        <Popover.Group className="hidden lg:flex lg:gap-x-12">
+        </div>
+        <Popover.Group className="hidden md:flex md:gap-x-12">
           <NavLink
             to="/"
             className={({ isActive }) =>
@@ -60,20 +60,14 @@ export default function Header() {
       </nav>
       <Dialog
         as="div"
-        className="lg:hidden"
+        className="md:hidden"
         open={mobileMenuOpen}
         onClose={setMobileMenuOpen}
       >
-        <div className="fixed inset-0 z-10" />
-        <Dialog.Panel className="fixed inset-y-0 right-0 z-10 w-full overflow-y-auto bg-white px-6 py-6 sm:max-w-sm sm:ring-1 sm:ring-gray-900/10">
+        <Dialog.Panel className="fixed inset-y-0 right-0 z-50 w-full overflow-y-auto bg-white px-6 py-6 sm:max-w-sm sm:ring-1 sm:ring-gray-900/10">
           <div className="flex items-center justify-between">
             <a href="/" className="-m-1.5 p-1.5">
               <span className="sr-only">우리동네 동물병원</span>
-              <img
-                className="h-8 w-auto"
-                src="https://tailwindui.com/img/logos/mark.svg?color=indigo&shade=600"
-                alt=""
-              />
             </a>
             <button
               type="button"
@@ -91,15 +85,15 @@ export default function Header() {
                   href="/"
                   className="-mx-3 block rounded-lg px-3 py-2 text-base font-semibold leading-7 text-gray-900 hover:bg-gray-50"
                 >
-                  Company
+                  특수동물 병원 검색
                 </a>
               </div>
               <div className="py-6">
                 <a
-                  href="/"
+                  href="/report"
                   className="-mx-3 block rounded-lg px-3 py-2.5 text-base font-semibold leading-7 text-gray-900 hover:bg-gray-50"
                 >
-                  Log in
+                  제보
                 </a>
               </div>
             </div>
