@@ -16,9 +16,9 @@ export default function Header() {
           <NavLink to="/" className="-m-1.5 p-1.5">
             <img
               className="h-8 w-auto"
-              src="https://tailwindui.com/img/logos/mark.svg?color=indigo&shade=600"
-              alt="WooDong Logo"
-              title="WooDong"
+              src="/images/logo.png"
+              alt="woodong Logo"
+              title="woodong"
             />
           </NavLink>
         </h1>
@@ -36,8 +36,8 @@ export default function Header() {
           <NavLink
             to="/"
             className={({ isActive }) =>
-              (isActive && "text-indigo-600") +
-              " text-sm font-semibold leading-6 text-gray-900 hover:text-indigo-500"
+              (isActive && "text-primary") +
+              " text-sm leading-6 text-gray-900 hover:font-bold"
             }
           >
             특수동물 병원 검색
@@ -45,8 +45,8 @@ export default function Header() {
           <NavLink
             to="/report"
             className={({ isActive }) =>
-              (isActive && "text-indigo-600") +
-              " text-sm font-semibold leading-6 text-gray-900 hover:text-indigo-500"
+              (isActive && "text-primary") +
+              " text-sm leading-6 text-gray-900 hover:font-bold"
             }
           >
             제보
