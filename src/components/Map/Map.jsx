@@ -1,5 +1,6 @@
 import React, { useEffect, useRef, useState } from "react";
-import { PROJECT_ID } from "../../config/config";
+import { firestore } from "../../firebase/firebase";
+import { COLLECTION, DOC, PROJECT_ID } from "../../config/config";
 import InfoWindow from "./InfoWindow";
 
 const { kakao } = window;
@@ -11,10 +12,11 @@ export default function Map() {
     lng: null,
   });
   const [data, setData] = useState(null);
+  const [errMsg, setErrMsg] = useState("");
 
-  const geocoder = new kakao.maps.services.Geocoder();
   const getLatLngFunc = (address) => {
     // 주소-좌표 변환 객체를 생성합니다
+    const geocoder = new kakao.maps.services.Geocoder();
     return new Promise((resolve, reject) => {
       geocoder.addressSearch(address, async (result, status) => {
         // 정상적으로 검색이 완료됐으면
@@ -44,15 +46,19 @@ export default function Map() {
   };
 
   function locationErr() {
-    alert("I can't find you. No weather for you.");
+    alert(`${errMsg}`);
   }
 
   const getData = () => {
-    fetch(
-      `https://${PROJECT_ID}-default-rtdb.firebaseio.com/hospital/list.json`
-    )
-      .then((data) => data.json())
-      .then((res) => setData(res));
+    try {
+      fetch(
+        `https://${PROJECT_ID}-default-rtdb.firebaseio.com/hospital/list.json`
+      )
+        .then((data) => data.json())
+        .then((res) => setData(res));
+    } catch (error) {
+      setErrMsg(error);
+    }
   };
 
   // const getData = () => {
@@ -69,7 +75,7 @@ export default function Map() {
     if (kakaoMap) return;
     const mapOption = {
       center: new kakao.maps.LatLng(location.lat, location.lng),
-      level: 3,
+      level: 8,
     };
 
     const map = new kakao.maps.Map(mapContainer.current, mapOption);
@@ -77,41 +83,59 @@ export default function Map() {
   };
 
   const initialMap = async (map) => {
-    // 일반 지도와 스카이뷰로 지도 타입을 전환할 수 있는 지도타입 컨트롤을 생성합니다
-    // 지도에 컨트롤을 추가해야 지도위에 표시됩니다
-    // kakao.maps.ControlPosition은 컨트롤이 표시될 위치를 정의하는데 TOPRIGHT는 오른쪽 위를 의미합니다
     const mapTypeControl = new kakao.maps.MapTypeControl();
     kakaoMap.addControl(mapTypeControl, kakao.maps.ControlPosition.TOPRIGHT);
 
-    // 지도 확대 축소를 제어할 수 있는  줌 컨트롤을 생성합니다
     const zoomControl = new kakao.maps.ZoomControl();
     kakaoMap.addControl(zoomControl, kakao.maps.ControlPosition.RIGHT);
 
     // 마커 이미지의 이미지 주소입니다
-    // const imageSrc =
-    //   "https://t1.daumcdn.net/localimg/localimages/07/mapapidoc/markerStar.png";
-
+    const imageSrc = `/images/marker.png`,
+      imageSize = new kakao.maps.Size(48, 48), // 마커이미지의 크기입니다
+      imageOption = { offset: new kakao.maps.Point(27, 69) }; // 마커이미지의 옵션입니다. 마커의 좌표와 일치시킬 이미지 안에서의 좌표를 설정합니다.
+    const markerImage = new kakao.maps.MarkerImage(
+      imageSrc,
+      imageSize,
+      imageOption
+    );
     // 주소로 좌표를 검색합니다
     try {
       data.map(async (item, idx) => {
         const getCoords = await getLatLngFunc(item.address);
         const coords = new kakao.maps.LatLng(getCoords.lat, getCoords.lng);
-        // 결과값으로 받은 위치를 마커로 표시합니다
+
         const marker = new kakao.maps.Marker({
           position: coords,
+          title: item.title,
+          image: markerImage,
         });
 
         marker.setMap(kakaoMap);
-        // 인포윈도우로 장소에 대한 설명을 표시합니다
-        const iwContent = `<div style="width:150px;text-align:center;padding:6px 0;">
-              <a href="https://map.kakao.com/link/search/${item.title}
-              " target="_blank">
-              ${item.title}</a></div>`;
+
+        const iwContent = `
+        <div style="width:150px; text-align:center; padding:6px 0;">
+            ${item.title}
+        </div>`;
 
         const infowindow = new kakao.maps.InfoWindow({
           content: iwContent,
         });
-        infowindow.open(kakaoMap, marker);
+
+        kakao.maps.event.addListener(
+          marker,
+          "mouseover",
+          onInfoWindowHandler(kakaoMap, marker, infowindow)
+        );
+        kakao.maps.event.addListener(
+          marker,
+          "mouseout",
+          offInfoWindowHandler(infowindow)
+        );
+        kakao.maps.event.addListener(
+          marker,
+          "click",
+          openNewTabHandler(`https://map.kakao.com/link/search/${item.title}`)
+        );
       });
     } catch (e) {
       console.log("에러", e);
@@ -124,7 +148,24 @@ export default function Map() {
     kakaoMap.setCenter(moveLatLon);
   };
 
+  const onInfoWindowHandler = (map, marker, infowindow) => {
+    return function () {
+      infowindow.open(map, marker);
+    };
+  };
+  const offInfoWindowHandler = (infowindow) => {
+    return function () {
+      infowindow.close();
+    };
+  };
+  const openNewTabHandler = (url) => {
+    return function () {
+      window.open(url, "_blank", "noopener, noreferrer");
+    };
+  };
+
   useEffect(() => {
+    if (!navigator.geolocation) return;
     navigator.geolocation.getCurrentPosition(currentPosition, locationErr);
     getData();
   }, []);
@@ -144,7 +185,7 @@ export default function Map() {
       style={{ width: "100%" }}
       className="h-[calc(100vh_-_80px)] overflow-hidden relative flex flex-col-reverse md:flex-row"
     >
-      <InfoWindow data={data} moveMap={infoWindowClickHandler} map={kakaoMap} />
+      <InfoWindow data={data} moveMap={infoWindowClickHandler} />
       <article ref={mapContainer} id="map" className="w-full h-full">
         <button
           type="button"
