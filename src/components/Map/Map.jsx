@@ -8,11 +8,10 @@ export default function Map() {
   const mapContainer = useRef(null);
   const [kakaoMap, setKakaoMap] = useState(null);
   const [location, setLocation] = useState({
-    lat: null,
-    lng: null,
+    lat: 37.566826004661,
+    lng: 126.978652258309,
   });
   const [data, setData] = useState(null);
-  const [errMsg, setErrMsg] = useState("");
 
   const getLatLngFunc = (address) => {
     // 주소-좌표 변환 객체를 생성합니다
@@ -30,7 +29,6 @@ export default function Map() {
   };
 
   const infoWindowClickHandler = async (address, option) => {
-    // 지도의 중심을 결과값으로 받은 위치로 즉시 이동시킵니다
     const getCoords = await getLatLngFunc(address);
     const coords = new kakao.maps.LatLng(getCoords.lat, getCoords.lng);
     option === "smooth" ? kakaoMap.panTo(coords) : kakaoMap.setCenter(coords);
@@ -45,34 +43,35 @@ export default function Map() {
     });
   };
 
-  function locationErr() {
-    alert(`${errMsg}`);
+  function locationErr(error) {
+    alert(`현재 위치를 가져올 수 없습니다.`);
   }
 
-  const getData = () => {
-    try {
-      fetch(
-        `https://${PROJECT_ID}-default-rtdb.firebaseio.com/hospital/list.json`
-      )
-        .then((data) => data.json())
-        .then((res) => setData(res));
-    } catch (error) {
-      setErrMsg(error);
-    }
-  };
-
   // const getData = () => {
-  //   firestore
-  //     .collection(COLLECTION)
-  //     .doc(DOC)
-  //     .get()
-  //     .then((data) => {
-  //       setData(data.data().list);
-  //     });
+  //   try {
+  //     fetch(
+  //       `https://${PROJECT_ID}-default-rtdb.firebaseio.com/hospital/list.json`
+  //     )
+  //       .then((data) => data.json())
+  //       .then((res) => setData(res));
+  //   } catch (error) {
+  //     setErrMsg(error);
+  //   }
   // };
+
+  const getData = () => {
+    firestore
+      .collection(COLLECTION)
+      .doc(DOC)
+      .get()
+      .then((data) => {
+        setData(data.data().list);
+      });
+  };
 
   const createMap = () => {
     if (kakaoMap) return;
+
     const mapOption = {
       center: new kakao.maps.LatLng(location.lat, location.lng),
       level: 8,
@@ -98,7 +97,7 @@ export default function Map() {
       imageSize,
       imageOption
     );
-    // 주소로 좌표를 검색합니다
+
     try {
       data.map(async (item, idx) => {
         const getCoords = await getLatLngFunc(item.address);
@@ -153,11 +152,13 @@ export default function Map() {
       infowindow.open(map, marker);
     };
   };
+
   const offInfoWindowHandler = (infowindow) => {
     return function () {
       infowindow.close();
     };
   };
+
   const openNewTabHandler = (url) => {
     return function () {
       window.open(url, "_blank", "noopener, noreferrer");
@@ -165,8 +166,8 @@ export default function Map() {
   };
 
   useEffect(() => {
-    if (!navigator.geolocation) return;
-    navigator.geolocation.getCurrentPosition(currentPosition, locationErr);
+    if (!navigator.geolocation) locationErr();
+    else navigator.geolocation.getCurrentPosition(currentPosition, locationErr);
     getData();
   }, []);
 
@@ -189,7 +190,7 @@ export default function Map() {
       <article ref={mapContainer} id="map" className="w-full h-full">
         <button
           type="button"
-          className="rounded-md bg-sky-500/75 p-3 absolute right-0 bottom-0 z-40"
+          className="rounded-md bg-primary/75 p-3 absolute right-2 bottom-2 z-40"
           onClick={() => myLocationHandler()}
         >
           <svg
