@@ -1,11 +1,6 @@
-export function Search({ labelTxt, placeholder, onChange, onSubmit }) {
+export function Search({ value, labelTxt, placeholder, onChange, onSubmit }) {
   const handleSubmit = (event) => {
     event.preventDefault();
-    onSubmit();
-  };
-
-  const handleEnter = (event) => {
-    if (event.key !== "Eenter") return;
     onSubmit();
   };
 
@@ -37,8 +32,9 @@ export function Search({ labelTxt, placeholder, onChange, onSubmit }) {
         </div>
         <input
           type="search"
+          value={value}
           onChange={onChange}
-          onKeyDown={handleEnter}
+          // onKeyDown={handleEnter}
           id="keyword"
           className="block w-full mt-2 py-4 pl-10 pr-20 text-sm text-gray-900 border border-gray-300 rounded-lg  focus:ring-primary focus:border-primary "
           placeholder={placeholder}
