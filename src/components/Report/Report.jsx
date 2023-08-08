@@ -185,17 +185,40 @@ export default function Report() {
     });
 
     marker.setMap(kakaoMap);
-    setMarkers((prev) => [...prev, marker]);
+
+    setMarkers((prev) => {
+      if (!prev) return [];
+      return [...prev, marker];
+    });
 
     return marker;
   }
 
-  function removeMarker() {
-    for (const mk of markers) {
-      mk.setMap(null);
-    }
-    setMarkers([]);
-  }
+  const removeMarker = () => {
+    setMarkers((markers) => {
+      markers.forEach((marker) => {
+        marker.setMap(null);
+      });
+      return [];
+    });
+  };
+
+  const refrashDataHandler = () => {
+    setForm({
+      group: "",
+      placeId: "",
+      content: "",
+      address: "",
+      roadAddress: "",
+      hospitalName: "",
+      user: "user1",
+      email: "",
+      image: "",
+    });
+    setKeyword("");
+    removeAllChildNods();
+    removeMarker();
+  };
 
   const reportHandler = (event) => {
     const {
@@ -209,20 +232,16 @@ export default function Report() {
       email,
       image,
     } = form;
-    event.preventDefault();
 
-    if (group.indexOf("동물병원") < 0) {
-      alert("선택된 장소가 병원이 아닙니다.");
+    if (!placeId) {
+      alert("제보하고 싶은 병원을 선택해 주세요");
       return;
     }
-    if (
-      !group ||
-      !placeId ||
-      !address ||
-      !roadAddress ||
-      !hospitalName ||
-      !email
-    ) {
+    if (group.indexOf("동물병원") < 0) {
+      alert("선택된 장소가 동물병원인지 확인해주세요.");
+      return;
+    }
+    if (!group || !placeId || !address || !roadAddress || !hospitalName) {
       alert("필수 항목이 입력되지 않았습니다.");
       return;
     }
@@ -236,7 +255,13 @@ export default function Report() {
       image,
     };
 
-    firestore.collection("report").add(params);
+    try {
+      firestore.collection("report").add(params);
+      alert("완료되었습니다.");
+      refrashDataHandler();
+    } catch (error) {
+      throw error;
+    }
   };
 
   function displayPagination(pagination) {
@@ -273,7 +298,6 @@ export default function Report() {
   }
 
   const placesSearchCB = (data, status, pagination) => {
-    console.log("pagination", pagination);
     if (status === kakao.maps.services.Status.OK) {
       displayPlaces(data);
       displayPagination(pagination);
@@ -301,15 +325,17 @@ export default function Report() {
     }));
   };
 
-  function searchPlaces() {
+  const searchPlaces = () => {
     const ps = new kakao.maps.services.Places();
 
     if (!keyword.replace(/^\s+|\s+$/g, "")) {
+      removeAllChildNods();
+      removeMarker();
       return false;
     }
 
     ps.keywordSearch(keyword, placesSearchCB);
-  }
+  };
 
   const searchOnchangeHandler = useCallback((event) => {
     event.preventDefault();
@@ -347,14 +373,16 @@ export default function Report() {
             name="content"
             rows={3}
             className="block w-full resize-none rounded-md border-0 py-1.5 px-3 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-primary sm:text-sm sm:leading-6"
-            defaultValue={""}
+            value={form.content}
             onChange={onChangeHandler}
+            required
           />
         </div>
       </div>
 
       <div className="col-span-full mt-5 rounded-md border-0 overflow-hidden">
         <Search
+          value={keyword}
           labelTxt="제보할 병원을 알려주세요."
           placeholder="검색어를 입력하세요"
           onChange={(e) => searchOnchangeHandler(e)}
@@ -376,7 +404,7 @@ export default function Report() {
                   {getListItem(item)}
                 </ul>
               ) : (
-                <p className="text-xs">결과가 없습니다</p>
+                <p className="h-[90%] text-xs">결과가 없습니다</p>
               )}
               <div id="pagination" className="flex justify-center"></div>
             </div>
@@ -402,7 +430,7 @@ export default function Report() {
 
       <div className="mt-6 flex items-center justify-end gap-x-6">
         <CancelButtons txt="Cancel" />
-        <DefaultButtons txt="제보하기" />
+        <DefaultButtons txt="제보하기" onClick={() => reportHandler()} />
       </div>
     </article>
   );
