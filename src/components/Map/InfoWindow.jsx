@@ -1,4 +1,4 @@
-import React, { useState, useRef } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import location from "../../data/location.json";
 
 export default function InfoWindow({ data, moveMap }) {
@@ -14,11 +14,11 @@ export default function InfoWindow({ data, moveMap }) {
   const cateChangeHandler = (e) => {
     setCategory(e.target.value);
     cateScroll();
-    moveMap(e.target.value);
+    moveMap(e.target.value, 8);
   };
 
   const hospitalClickEvent = (address) => {
-    moveMap(address, "smooth");
+    moveMap(address, 5, "smooth");
   };
 
   return (
@@ -33,7 +33,7 @@ export default function InfoWindow({ data, moveMap }) {
           name=""
           id="locations"
           onChange={cateChangeHandler}
-          className="h-fit-content rounded-lg text-center py-2 px-6 mb-2 md:mb-5"
+          className="h-fit-content rounded-lg text-center py-2 px-6 my-2 md:mb-5"
         >
           {location.map((x, i) => (
             <option value={x} key={i}>
@@ -100,6 +100,7 @@ export default function InfoWindow({ data, moveMap }) {
 
       <button
         type="button"
+        onClick={() => setListState(!listState)}
         className="absolute top-[-40px] right-2/4 -rotate-90 md:rotate-0 md:top-2/4 md:right-[-30px] bg-white rounded-r-lg py-5 px-1"
       >
         <svg
