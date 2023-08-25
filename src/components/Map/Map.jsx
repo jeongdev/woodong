@@ -1,26 +1,16 @@
 import React, { useEffect, useRef, useState } from "react";
 import { firestore } from "../../firebase/firebase";
-import { COLLECTION, DOC, PROJECT_ID } from "../../config/config";
+import { COLLECTION, DOC } from "../../config/config";
 import InfoWindow from "./InfoWindow";
 import useMap from "../../hooks/useMap";
 
 export default function Map() {
   const mapContainer = useRef(null);
   const [data, setData] = useState(null);
-  const { kakaoMap, displayMarkerByAddress, moveMyAddress, moveByAddress } =
-    useMap(mapContainer, data);
-
-  // const getData = () => {
-  //   try {
-  //     fetch(
-  //       `https://${PROJECT_ID}-default-rtdb.firebaseio.com/hospital/list.json`
-  //     )
-  //       .then((data) => data.json())
-  //       .then((res) => setData(res));
-  //   } catch (error) {
-  //     setErrMsg(error);
-  //   }
-  // };
+  const { displayMarkerByAddress, moveMyAddress, moveByAddress } = useMap(
+    mapContainer,
+    true
+  );
 
   const getData = () => {
     firestore
@@ -32,10 +22,10 @@ export default function Map() {
       });
   };
 
-  const initialMap = async () => {
+  const initialMap = async (markers) => {
     try {
-      data.map(async (item) => {
-        displayMarkerByAddress(item);
+      markers.map(async (item) => {
+        displayMarkerByAddress(item.title, item.address);
       });
     } catch (e) {
       console.log("에러", e);
@@ -48,7 +38,7 @@ export default function Map() {
 
   useEffect(() => {
     if (!data) return;
-    initialMap();
+    initialMap(data);
   }, [data]);
 
   return (
