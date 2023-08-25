@@ -1,22 +1,16 @@
 import React, { useCallback, useEffect, useState, useRef } from "react";
 import { DefaultButtons, CancelButtons } from "../Common/Button/Buttons";
 import { firestore } from "../../firebase/firebase";
-import { COLLECTION, DOC, PROJECT_ID } from "../../config/config";
 import { Search } from "../Common/Search/Search";
+import useMap from "../../hooks/useMap";
 
 const { kakao } = window;
 export default function Report() {
   const mapContainer = useRef(null);
-  const [kakaoMap, setKakaoMap] = useState(null);
   const [keyword, setKeyword] = useState("");
   const [item, setItem] = useState([]);
   const [markers, setMarkers] = useState([]);
   const [selectedMarker, setSelectedMarker] = useState(null);
-  const [infowindow] = useState(new kakao.maps.InfoWindow({ zIndex: 1 }));
-  const [location, setLocation] = useState({
-    lat: null,
-    lng: null,
-  });
   const [form, setForm] = useState({
     group: "",
     placeId: "",
@@ -28,25 +22,8 @@ export default function Report() {
     email: "",
     image: "",
   });
-
-  const createMap = useCallback(() => {
-    if (kakaoMap) return;
-    const mapOption = {
-      center: new kakao.maps.LatLng(33.450701, 126.570667),
-      level: 8,
-    };
-    const map = new kakao.maps.Map(mapContainer.current, mapOption);
-    setKakaoMap(map);
-  }, []);
-
-  const currentPosition = (position) => {
-    const lat = position.coords.latitude;
-    const lng = position.coords.longitude;
-    setLocation({
-      lat,
-      lng,
-    });
-  };
+  const { kakaoMap, displayMarkerByAddress, searchDisplayMarker } =
+    useMap(mapContainer);
 
   const onChangeHandler = useCallback(
     (event) => {
@@ -63,6 +40,10 @@ export default function Report() {
   };
 
   const displayPlaces = (places) => {
+    if (!places || places.length === 0) {
+      displayMarkerByAddress(null);
+      return;
+    }
     let menuEl = document.getElementById("menu_wrap");
     let bounds = new kakao.maps.LatLngBounds();
 
@@ -70,39 +51,32 @@ export default function Report() {
     removeMarker();
     setItem(places);
 
+    searchDisplayMarker(places, keyword);
+
     places.map((item, i) => {
       const placePosition = new kakao.maps.LatLng(item.y, item.x);
-      const marker = addMarker(placePosition, i);
       bounds.extend(placePosition);
+      // (function (marker, title) {
+      //   kakao.maps.event.addListener(marker, "mouseover", function () {
+      //     displayInfowindow(marker, title);
+      //   });
 
-      (function (marker, title) {
-        kakao.maps.event.addListener(marker, "mouseover", function () {
-          displayInfowindow(marker, title);
-        });
+      //   kakao.maps.event.addListener(marker, "mouseout", function () {
+      //     infowindow.close();
+      //   });
 
-        kakao.maps.event.addListener(marker, "mouseout", function () {
-          infowindow.close();
-        });
+      //   marker.onmouseover = function () {
+      //     displayInfowindow(marker, title);
+      //   };
 
-        marker.onmouseover = function () {
-          displayInfowindow(marker, title);
-        };
-
-        marker.onmouseout = function () {
-          infowindow.close();
-        };
-      })(marker, item.place_name);
+      //   marker.onmouseout = function () {
+      //     infowindow.close();
+      //   };
+      // })(marker, item.place_name);
     });
     menuEl.scrollTop = 0;
     kakaoMap.setBounds(bounds);
   };
-
-  function displayInfowindow(marker, title) {
-    const content = `<div style="padding:5px;z-index:1">${title}</div>`;
-
-    infowindow.setContent(content);
-    infowindow.open(kakaoMap, marker);
-  }
 
   const removeAllChildNods = () => {
     setItem([]);
@@ -167,32 +141,6 @@ export default function Report() {
     },
     [item]
   );
-
-  function addMarker(position, idx, title) {
-    const imageSrc = "/images/marker.png";
-    const imageSize = new kakao.maps.Size(48, 48);
-    const imgOptions = {
-      offset: new kakao.maps.Point(13, 37),
-    };
-    const markerImage = new kakao.maps.MarkerImage(
-      imageSrc,
-      imageSize,
-      imgOptions
-    );
-    const marker = new kakao.maps.Marker({
-      position: position, // 마커의 위치
-      image: markerImage,
-    });
-
-    marker.setMap(kakaoMap);
-
-    setMarkers((prev) => {
-      if (!prev) return [];
-      return [...prev, marker];
-    });
-
-    return marker;
-  }
 
   const removeMarker = () => {
     setMarkers((markers) => {
@@ -304,6 +252,7 @@ export default function Report() {
     } else if (status === kakao.maps.services.Status.ZERO_RESULT) {
       removeAllChildNods();
       removeMarker();
+      displayPlaces([]);
       return;
     } else if (status === kakao.maps.services.Status.ERROR) {
       alert("검색 결과 중 오류가 발생했습니다.");
@@ -331,7 +280,8 @@ export default function Report() {
     if (!keyword.replace(/^\s+|\s+$/g, "")) {
       removeAllChildNods();
       removeMarker();
-      return false;
+      displayPlaces([]);
+      return;
     }
 
     ps.keywordSearch(keyword, placesSearchCB);
@@ -343,9 +293,9 @@ export default function Report() {
   }, []);
 
   useEffect(() => {
-    if (!navigator.geolocation) return;
-    navigator.geolocation.getCurrentPosition(currentPosition);
-    createMap();
+    // if (!navigator.geolocation) return;
+    // navigator.geolocation.getCurrentPosition(currentPosition);
+    // createMap();
   }, []);
 
   useEffect(() => {
@@ -389,11 +339,11 @@ export default function Report() {
           onSubmit={() => searchPlaces()}
         />
 
-        <div className="block w-full resize-none rounded-md border-0 py-1.5 px-3 mt-2 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 sm:text-sm sm:leading-6">
+        <div className="block w-full resize-none rounded-md border-0 py-1.5 md:px-3 mt-2 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 sm:text-sm sm:leading-6">
           <article
             ref={mapContainer}
             id="map"
-            className="w-full h-96 mt-3 rounded-md ring-1 ring-inset ring-gray-300"
+            className="w-full h-96 mt-3 rounded-md outline-1 "
           >
             <div
               id="menu_wrap"
@@ -422,7 +372,7 @@ export default function Report() {
             value={
               `선택된 병원: ${form?.hospitalName}` || "선택된 병원이 없습니다"
             }
-            className="w-full text-sm text-gray-500"
+            className="w-full text-sm text-gray-500 px-2"
             readOnly
           />
         </div>

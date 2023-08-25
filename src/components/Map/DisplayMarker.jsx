@@ -1,14 +1,24 @@
 import React from "react";
 import GetLocationByAddress from "./GetLocationByAddress";
 
-export default async function DisplayMarker(map, addressInfo) {
+export default async function DisplayMarker(
+  map,
+  markers,
+  title,
+  address,
+  resetState
+) {
   const { kakao } = window;
-  const { address, title } = addressInfo;
   const markerPosition = await GetLocationByAddress(address);
+
   const coords = new window.kakao.maps.LatLng(
-    markerPosition.lat,
-    markerPosition.lng
+    markerPosition?.lat,
+    markerPosition?.lng
   );
+
+  if (resetState || !title || !address) {
+    markers.forEach((marker) => marker.setMap(null));
+  }
 
   const MARKER_SRC = "/images/marker.png";
   const imageSize = new kakao.maps.Size(48, 48);
@@ -19,6 +29,7 @@ export default async function DisplayMarker(map, addressInfo) {
     imageSize,
     imageOption
   );
+
   const marker = new kakao.maps.Marker({
     position: coords,
     title: title + " 바로가기",
@@ -47,7 +58,7 @@ export default async function DisplayMarker(map, addressInfo) {
 
   const iwContent = `
     <div style="width: 150px; text-align:center; padding:6px 8px; display: flex; flex-direction: column;">
-        <span style="font-size: 14px">${addressInfo.title}</span>
+        <span style="font-size: 14px">${title}</span>
     </div>`;
 
   const infowindow = new kakao.maps.InfoWindow({
@@ -67,6 +78,8 @@ export default async function DisplayMarker(map, addressInfo) {
   kakao.maps.event.addListener(
     marker,
     "click",
-    openNewTabHandler(`https://map.kakao.com/link/search/${addressInfo.title}`)
+    openNewTabHandler(`https://map.kakao.com/link/search/${title}`)
   );
+
+  return marker;
 }

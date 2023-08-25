@@ -1,6 +1,5 @@
-import React from "react";
-
 export default async function GetLocationByAddress(address) {
+  if (!address) return;
   const geocoder = new window.kakao.maps.services.Geocoder();
 
   return await new Promise((resolve) => {
