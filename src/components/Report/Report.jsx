@@ -10,6 +10,10 @@ export default function Report() {
   const [keyword, setKeyword] = useState("");
   const [item, setItem] = useState([]);
   const [selectedMarker, setSelectedMarker] = useState(null);
+  const [pagination, setPagination] = useState({
+    last: 1,
+    current: 1,
+  });
   const [form, setForm] = useState({
     group: "",
     placeId: "",
@@ -54,23 +58,6 @@ export default function Report() {
     places.map((item, i) => {
       const placePosition = new kakao.maps.LatLng(item.y, item.x);
       bounds.extend(placePosition);
-      // (function (marker, title) {
-      //   kakao.maps.event.addListener(marker, "mouseover", function () {
-      //     displayInfowindow(marker, title);
-      //   });
-
-      //   kakao.maps.event.addListener(marker, "mouseout", function () {
-      //     infowindow.close();
-      //   });
-
-      //   marker.onmouseover = function () {
-      //     displayInfowindow(marker, title);
-      //   };
-
-      //   marker.onmouseout = function () {
-      //     infowindow.close();
-      //   };
-      // })(marker, item.place_name);
     });
     menuEl.scrollTop = 0;
     kakaoMap.setBounds(bounds);
@@ -78,63 +65,6 @@ export default function Report() {
 
   const removeAllChildNods = () => {
     setItem([]);
-  };
-
-  const getListItem = (places, index) => {
-    // itemEl.onmouseover = function () {
-    //   displayInfowindow(marker, title);
-    // };
-
-    // itemEl.onmouseout = function () {
-    //   infowindow.close();
-    // };
-    return places.map((item, index) => (
-      <li
-        key={item.id}
-        className={`p-4 border-b ${
-          selectedMarker?.id === item.id ? "bg-slate-200" : ""
-        }`}
-        onClick={() => selectMarkerHandler(item)}
-      >
-        <span className={`markerbg marker_${index + 1}`}></span>
-        <div className="info">
-          <h5 className="mb-2 text-sm">{item.place_name}</h5>
-
-          <div className="mb-1">
-            {item.road_address_name ? (
-              <>
-                <span className="text-xs">
-                  도로명: {item.road_address_name}
-                </span>
-                <br />
-                <span className="text-xs">지번: {item.address_name}</span>
-              </>
-            ) : (
-              <span className="text-xs">{item.address_name}</span>
-            )}
-          </div>
-          {item.phone && (
-            <div className="flex items-center">
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                fill="black"
-                viewBox="0 0 24 24"
-                strokeWidth={1.5}
-                stroke="currentColor"
-                className="w-4 h-4 mr-1"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  d="M2.25 6.75c0 8.284 6.716 15 15 15h2.25a2.25 2.25 0 002.25-2.25v-1.372c0-.516-.351-.966-.852-1.091l-4.423-1.106c-.44-.11-.902.055-1.173.417l-.97 1.293c-.282.376-.769.542-1.21.38a12.035 12.035 0 01-7.143-7.143c-.162-.441.004-.928.38-1.21l1.293-.97c.363-.271.527-.734.417-1.173L6.963 3.102a1.125 1.125 0 00-1.091-.852H4.5A2.25 2.25 0 002.25 4.5v2.25z"
-                />
-              </svg>
-              <span className="text-xs">{item.phone}</span>
-            </div>
-          )}
-        </div>
-      </li>
-    ));
   };
 
   const refrashDataHandler = () => {
@@ -198,36 +128,7 @@ export default function Report() {
   };
 
   function displayPagination(pagination) {
-    let paginationEl = document.getElementById("pagination"),
-      fragment = document.createDocumentFragment(),
-      i;
-
-    // 기존에 추가된 페이지번호를 삭제합니다
-    while (paginationEl.hasChildNodes()) {
-      paginationEl.removeChild(paginationEl.lastChild);
-    }
-
-    const elContent = `
-      <button className="${pagination.current}"></button>
-    `;
-    for (i = 1; i <= pagination.last; i++) {
-      var el = document.createElement("a");
-      el.href = "#";
-      el.innerHTML = i;
-
-      if (i === pagination.current) {
-        el.className = "on";
-      } else {
-        el.onclick = (function (i) {
-          return function () {
-            pagination.gotoPage(i);
-          };
-        })(i);
-      }
-
-      fragment.appendChild(el);
-    }
-    paginationEl.appendChild(fragment);
+    setPagination(pagination);
   }
 
   const placesSearchCB = (data, status, pagination) => {
@@ -236,7 +137,6 @@ export default function Report() {
       displayPagination(pagination);
     } else if (status === kakao.maps.services.Status.ZERO_RESULT) {
       removeAllChildNods();
-      // removeMarker();
       displayPlaces([]);
       return;
     } else if (status === kakao.maps.services.Status.ERROR) {
@@ -323,7 +223,7 @@ export default function Report() {
           <article
             ref={mapContainer}
             id="map"
-            className="w-full h-96 mt-3 rounded-md outline-1"
+            className="w-full h-96 mt-3 outline-1"
           >
             <div
               id="menu_wrap"
@@ -331,12 +231,72 @@ export default function Report() {
             >
               {item.length > 0 ? (
                 <ul id="placesList" className="h-[90%] overflow-y-scroll">
-                  {getListItem(item)}
+                  {item.map((item, index) => (
+                    <li
+                      key={item.id}
+                      className={`p-4 border-b ${
+                        selectedMarker?.id === item.id ? "bg-slate-200" : ""
+                      }`}
+                      onClick={() => selectMarkerHandler(item)}
+                    >
+                      <span className={`markerbg marker_${index + 1}`}></span>
+                      <div className="info">
+                        <h5 className="mb-2 text-sm">{item.place_name}</h5>
+
+                        <div className="mb-1">
+                          {item.road_address_name ? (
+                            <>
+                              <span className="text-xs">
+                                도로명: {item.road_address_name}
+                              </span>
+                              <br />
+                              <span className="text-xs">
+                                지번: {item.address_name}
+                              </span>
+                            </>
+                          ) : (
+                            <span className="text-xs">{item.address_name}</span>
+                          )}
+                        </div>
+                        {item.phone && (
+                          <div className="flex items-center">
+                            <svg
+                              xmlns="http://www.w3.org/2000/svg"
+                              fill="black"
+                              viewBox="0 0 24 24"
+                              strokeWidth={1.5}
+                              stroke="currentColor"
+                              className="w-4 h-4 mr-1"
+                            >
+                              <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                d="M2.25 6.75c0 8.284 6.716 15 15 15h2.25a2.25 2.25 0 002.25-2.25v-1.372c0-.516-.351-.966-.852-1.091l-4.423-1.106c-.44-.11-.902.055-1.173.417l-.97 1.293c-.282.376-.769.542-1.21.38a12.035 12.035 0 01-7.143-7.143c-.162-.441.004-.928.38-1.21l1.293-.97c.363-.271.527-.734.417-1.173L6.963 3.102a1.125 1.125 0 00-1.091-.852H4.5A2.25 2.25 0 002.25 4.5v2.25z"
+                              />
+                            </svg>
+                            <span className="text-xs">{item.phone}</span>
+                          </div>
+                        )}
+                      </div>
+                    </li>
+                  ))}
                 </ul>
               ) : (
                 <p className="h-[90%] text-xs px-3">결과가 없습니다</p>
               )}
-              <div id="pagination" className="flex justify-center"></div>
+              <div className="flex justify-center">
+                {Array.from({ length: pagination.last }, (v, i) => i + 1).map(
+                  (item) => (
+                    <button
+                      key={item}
+                      type="button"
+                      onClick={(e) => pagination.gotoPage(e.target.textContent)}
+                    >
+                      {item}
+                    </button>
+                  )
+                )}
+              </div>
             </div>
           </article>
 
