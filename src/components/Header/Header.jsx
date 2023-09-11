@@ -87,18 +87,16 @@ export default function Header() {
           <div className="mt-6 flow-root">
             <div className="-my-6 divide-y divide-gray-500/10">
               {navList.map((item, i) => (
-                <div
-                  key={`m-${i}`}
-                  onClick={() =>
-                    location.pathname !== item.path && setMobileMenuOpen(false)
-                  }
-                  className="space-y-2 py-6"
-                >
+                <div key={`m-${i}`} className="space-y-2">
                   <NavLink
                     to={item.path}
+                    onClick={() =>
+                      location.pathname !== item.path &&
+                      setMobileMenuOpen(false)
+                    }
                     className={({ isActive }) =>
                       (isActive && "text-primary") +
-                      " -mx-3 block rounded-lg px-3 py-2 text-base font-semibold leading-7 text-gray-900 hover:bg-gray-50"
+                      " -mx-3 block rounded-lg px-3 py-8 text-base font-semibold leading-7 text-gray-900 hover:bg-gray-50"
                     }
                   >
                     {item.txt}
