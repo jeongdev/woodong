@@ -50,6 +50,7 @@ export default function Map() {
       <article ref={mapContainer} id="map" className="w-full h-full">
         <button
           type="button"
+          title="내 위치"
           className="rounded-md bg-primary/75 p-3 absolute right-2 bottom-2 z-40"
           onClick={() => moveMyAddress()}
         >

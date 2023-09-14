@@ -1,4 +1,3 @@
-import React from "react";
 import GetLocationByAddress from "./GetLocationByAddress";
 
 export default async function DisplayMarker(
@@ -6,18 +5,21 @@ export default async function DisplayMarker(
   markers,
   title,
   address,
-  resetState
+  resetState,
+  selectedMarker
 ) {
   const { kakao } = window;
   const markerPosition = await GetLocationByAddress(address);
-
   const coords = new window.kakao.maps.LatLng(
     markerPosition?.lat,
     markerPosition?.lng
   );
 
   if (resetState || !title || !address) {
-    markers.forEach((marker) => marker.setMap(null));
+    markers.forEach((marker) => {
+      if (typeof marker !== "object") return;
+      marker.setMap(null);
+    });
   }
 
   const MARKER_SRC = "/images/marker.png";
