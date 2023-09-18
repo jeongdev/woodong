@@ -9,6 +9,7 @@ export default function Report() {
   const mapContainer = useRef(null);
   const [keyword, setKeyword] = useState("");
   const [item, setItem] = useState([]);
+  const [prevMarker, setPreviousMarker] = useState(null);
   const [selectedMarker, setSelectedMarker] = useState(null);
   const [pagination, setPagination] = useState({
     last: 1,
@@ -42,7 +43,7 @@ export default function Report() {
     setSelectedMarker(info);
   };
 
-  const displayPlaces = (places) => {
+  const displayPlaces = async (places, page) => {
     if (!places || places.length === 0) {
       displayMarkerByAddress(null);
       return;
@@ -53,7 +54,14 @@ export default function Report() {
     removeAllChildNods();
     setItem(places);
 
-    searchDisplayMarker(places, keyword, selectedMarker);
+    const mk = await searchDisplayMarker(
+      places,
+      keyword,
+      selectedMarker,
+      page,
+      prevMarker
+    );
+    setPreviousMarker(mk);
 
     places.map((item, i) => {
       const placePosition = new kakao.maps.LatLng(item.y, item.x);
@@ -62,7 +70,6 @@ export default function Report() {
     menuEl.scrollTop = 0;
     kakaoMap.setBounds(bounds);
   };
-
   const removeAllChildNods = () => {
     setItem([]);
   };
@@ -81,6 +88,10 @@ export default function Report() {
     });
     setKeyword("");
     removeAllChildNods();
+    setPagination({
+      last: 1,
+      current: 1,
+    });
   };
 
   const reportHandler = (event) => {
@@ -91,8 +102,6 @@ export default function Report() {
       address,
       roadAddress,
       hospitalName,
-      user,
-      email,
       image,
     } = form;
 
@@ -133,7 +142,7 @@ export default function Report() {
 
   const placesSearchCB = (data, status, pagination) => {
     if (status === kakao.maps.services.Status.OK) {
-      displayPlaces(data);
+      displayPlaces(data, pagination.current, prevMarker);
       displayPagination(pagination);
     } else if (status === kakao.maps.services.Status.ZERO_RESULT) {
       removeAllChildNods();
@@ -159,16 +168,22 @@ export default function Report() {
     }));
   };
 
-  const searchPlaces = () => {
+  const searchPlaces = (page) => {
     const ps = new kakao.maps.services.Places();
 
     if (!keyword.replace(/^\s+|\s+$/g, "")) {
       removeAllChildNods();
       displayPlaces([]);
+      setPagination({
+        last: 1,
+        current: 1,
+      });
       return;
     }
-
-    ps.keywordSearch(keyword, placesSearchCB);
+    const searchOption = {
+      page: +page || 1,
+    };
+    ps.keywordSearch(keyword, placesSearchCB, searchOption);
   };
 
   const searchOnchangeHandler = useCallback((event) => {
@@ -290,7 +305,13 @@ export default function Report() {
                     <button
                       key={item}
                       type="button"
-                      onClick={(e) => pagination.gotoPage(e.target.textContent)}
+                      className={`${
+                        pagination.current === item && "font-bold font-xs"
+                      } mx-1`}
+                      onClick={(e) => {
+                        // pagination.gotoPage(e.target.textContent);
+                        searchPlaces(e.target.textContent);
+                      }}
                     >
                       {item}
                     </button>
